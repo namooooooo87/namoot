@@ -1,0 +1,8 @@
+{
+  "name": "김민서(나무쌤) | 청소년 교육 전문가 포트폴리오",
+  "description": "청소년 교육 전문가 김민서(나무쌤)의 강사 경력, 청소년 참여·리더십·진로·AI 활용 교육 및 프로젝트 아카이브 포트폴리오입니다.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
