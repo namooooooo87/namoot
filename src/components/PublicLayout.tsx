@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, Trees, X } from 'lucide-react';
 import type { InstructorProfile } from '../types/portfolio';
+import { resolveAssetUrl } from '../lib/assetUrl';
 
 interface PublicLayoutProps {
   currentPath: string;
@@ -143,7 +144,7 @@ export function PublicLayout({
             {characterImage && (
               <div className="w-12 h-12 rounded-2xl bg-white border border-[#D4CBB8] overflow-hidden shrink-0">
                 <img
-                  src={characterImage}
+                  src={resolveAssetUrl(characterImage)}
                   alt="나무쌤 캐릭터"
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-contain scale-[1.45]"

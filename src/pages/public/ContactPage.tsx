@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Check, Copy, ExternalLink, Send } from 'lucide-react';
+import { Check, Copy, ExternalLink, Mail, Send } from 'lucide-react';
 import type { InstructorProfile } from '../../types/portfolio';
-import { api } from '../../lib/api';
+import { api, isStaticHostingMode } from '../../lib/api';
 import { useFeedback } from '../../components/ToastProvider';
 import { ResilientImage } from '../../components/ResilientImage';
 
@@ -15,6 +15,7 @@ export function ContactPage({ profile, characterImage }: ContactPageProps) {
   const [copied, setCopied] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [mailtoHref, setMailtoHref] = useState('');
   const [form, setForm] = useState({
     name: '',
     organization: '',
@@ -45,6 +46,23 @@ export function ContactPage({ profile, characterImage }: ContactPageProps) {
     setSubmitting(true);
     try {
       await api.submitInquiry(form);
+      if (isStaticHostingMode() && profile.contact.email) {
+        const subject = `[포트폴리오 문의] ${form.topic} - ${form.name}${form.organization ? ` (${form.organization})` : ''}`;
+        const body = [
+          `담당자: ${form.name}`,
+          `소속: ${form.organization || '-'}`,
+          `회신 이메일: ${form.email}`,
+          `연락처: ${form.phone || '-'}`,
+          `문의 구분: ${form.topic}`,
+          '',
+          form.message,
+        ].join('\n');
+        setMailtoHref(
+          `mailto:${encodeURIComponent(profile.contact.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+        );
+      } else {
+        setMailtoHref('');
+      }
       setSubmitted(true);
       setForm({
         name: '',
@@ -54,7 +72,7 @@ export function ContactPage({ profile, characterImage }: ContactPageProps) {
         topic: '강의 및 특강 요청',
         message: '',
       });
-      showToast('강의 및 협업 문의가 성공적으로 전달되었습니다.');
+      showToast('강의 및 협업 문의가 준비되었습니다.');
     } catch (err) {
       showToast(err instanceof Error ? err.message : '문의 전송에 실패했습니다.', 'error');
     } finally {
@@ -167,12 +185,25 @@ export function ContactPage({ profile, characterImage }: ContactPageProps) {
           <div className="p-6 sm:p-8 bg-white border border-[#E4DDD0] rounded-2xl">
             <h2 className="font-display text-xl text-[#1E2E21]">온라인 문의 남기기</h2>
             <p className="mt-1 text-sm text-[#5B564D]">
-              남겨 주신 문의는 관리자 페이지로 즉시 전달되어 안전하게 보관됩니다.
+              문의 내용을 작성해 주시면 확인 후 빠르게 회신드리겠습니다.
             </p>
 
             {submitted && (
-              <div className="mt-5 p-4 bg-[#EBF2EC] border border-[#2E5A3E]/30 rounded-xl text-sm text-[#2E5A3E]">
-                문의가 정상적으로 접수되었습니다. 남겨 주신 연락처로 빠르게 회신드리겠습니다.
+              <div className="mt-5 p-4 bg-[#EBF2EC] border border-[#2E5A3E]/30 rounded-xl text-sm text-[#2E5A3E] space-y-3">
+                <p>
+                  {mailtoHref
+                    ? '작성하신 문의 내용이 정리되었습니다. 아래 버튼을 눌러 이메일 앱으로 바로 발송해 주세요.'
+                    : '문의가 정상적으로 접수되었습니다. 남겨 주신 연락처로 빠르게 회신드리겠습니다.'}
+                </p>
+                {mailtoHref && (
+                  <a
+                    href={mailtoHref}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-[#2E5A3E] rounded-xl hover:bg-[#234730] transition-colors"
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    {profile.contact.email}로 이메일 보내기
+                  </a>
+                )}
               </div>
             )}
 

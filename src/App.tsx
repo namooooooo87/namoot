@@ -23,9 +23,30 @@ import { AdminProjectsPage } from './pages/admin/AdminProjectsPage';
 import { AdminHomeSettingsPage } from './pages/admin/AdminHomeSettingsPage';
 import { AdminContentsPage } from './pages/admin/AdminContentsPage';
 
+function getRouteFromLocation(): string {
+  const hash = window.location.hash;
+  if (hash && hash.startsWith('#/')) {
+    return hash.slice(1) || '/';
+  }
+  const path = window.location.pathname || '/';
+  if (
+    path === '/about' ||
+    path === '/lectures' ||
+    path.startsWith('/lectures/') ||
+    path === '/projects' ||
+    path.startsWith('/projects/') ||
+    path === '/contact' ||
+    path === '/admin' ||
+    path.startsWith('/admin/')
+  ) {
+    return path;
+  }
+  return '/';
+}
+
 function PortfolioRouterApp() {
   const { showToast } = useFeedback();
-  const [currentPath, setCurrentPath] = useState(() => window.location.pathname || '/');
+  const [currentPath, setCurrentPath] = useState(() => getRouteFromLocation());
   const [publicData, setPublicData] = useState<PublicBootstrapPayload | null>(null);
   const [adminData, setAdminData] = useState<AdminBootstrapPayload | null>(null);
   const [authStatus, setAuthStatus] = useState<AuthStatusPayload>({
@@ -37,19 +58,25 @@ function PortfolioRouterApp() {
   const [error, setError] = useState<string | null>(null);
 
   const navigate = useCallback((to: string) => {
-    if (window.location.pathname !== to) {
-      window.history.pushState({}, '', to);
+    const normalized = to.startsWith('/') ? to : `/${to}`;
+    const targetHash = `#${normalized}`;
+    if (window.location.hash !== targetHash) {
+      window.location.hash = targetHash;
     }
-    setCurrentPath(to);
+    setCurrentPath(normalized);
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, []);
 
   useEffect(() => {
-    const handlePopState = () => {
-      setCurrentPath(window.location.pathname || '/');
+    const syncRoute = () => {
+      setCurrentPath(getRouteFromLocation());
     };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    window.addEventListener('hashchange', syncRoute);
+    window.addEventListener('popstate', syncRoute);
+    return () => {
+      window.removeEventListener('hashchange', syncRoute);
+      window.removeEventListener('popstate', syncRoute);
+    };
   }, []);
 
   const loadAll = useCallback(async () => {
